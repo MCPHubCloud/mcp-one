@@ -23,10 +23,17 @@ func NewMcpOneConfig() *McpOneConfig {
 
 	config.McpServers = append(config.McpServers, types.ServerRegistryInfo{
 		Enable:    true,
+		Name:      "mcp-fetch",
+		TransType: types.TransportSSE,
+		Url:       "http://101.200.75.13:8080/sse",
+	})
+
+	config.McpServers = append(config.McpServers, types.ServerRegistryInfo{
+		Enable:    true,
 		Name:      "mcp-timeserver",
 		TransType: types.TransportStdio,
-		Command:   "/Users/barry/UserApps/anaconda3/anaconda3/bin/uvx",
-		Args:      []string{"mcp-timeserver"},
+		Command:   "/Users/barry/UserApps/anaconda3/anaconda3/bin/python3",
+		Args:      []string{"-m", "mcp_simple_timeserver"},
 	})
 
 	return config

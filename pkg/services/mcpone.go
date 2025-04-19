@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -10,6 +11,7 @@ import (
 	"log/slog"
 	"mcphub.cloud/mcp-one/pkg/config"
 	"mcphub.cloud/mcp-one/pkg/types"
+	"strings"
 	"time"
 )
 
@@ -18,6 +20,13 @@ import (
 const (
 	MCPONE_TOOL_PREFIX string = "mcpone@"
 )
+
+func extractToolName(s string) (string, error) {
+	if strings.HasPrefix(s, MCPONE_TOOL_PREFIX) {
+		return strings.TrimPrefix(s, MCPONE_TOOL_PREFIX), nil
+	}
+	return "", errors.New("tool name not recognized by mcpone")
+}
 
 type MCPOneServer struct {
 	serverConfig *config.McpOneConfig
@@ -70,7 +79,15 @@ func (m *MCPOneServer) addToolForMcpOneServer(origTool mcp.Tool, instance *types
 }
 
 func (m *MCPOneServer) callTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	toolName := request.Params.Name
 	client := m.getClient(request.Params.Name)
+
+	backendToolName, err := extractToolName(toolName)
+	if err != nil {
+		return mcp.NewToolResultText(fmt.Sprintf("Failed call tool  %s!", err)), err
+	}
+
+	request.Params.Name = backendToolName
 	log.Printf("Call tool name: %+v", request)
 	if client != nil {
 		ret, err := client.CallTool(ctx, request)
@@ -87,12 +104,20 @@ func (m *MCPOneServer) callTool(ctx context.Context, request mcp.CallToolRequest
 func (m *MCPOneServer) registerServer(registry types.ServerRegistryInfo) {
 	//建立客户端，更新链接状态
 	var client mcpclient.MCPClient
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
 	switch registry.TransType {
 	case types.TransportSSE:
 		{
 			if c, err := mcpclient.NewSSEMCPClient(registry.Url); err != nil {
-				slog.Error("failed register mcp server for ", registry.Name)
+				slog.Error("failed register mcp server for %s, %s", registry.Name, err.Error())
+				return
 			} else {
+				if err := c.Start(ctx); err != nil {
+					slog.Error("failed start sse client for %s, %s", registry.Name, err.Error())
+					return
+				}
 				client = c
 			}
 		}
@@ -110,8 +135,6 @@ func (m *MCPOneServer) registerServer(registry types.ServerRegistryInfo) {
 	serverInstance := types.NewServerInstance(registry.Name)
 
 	//connect
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
 	fmt.Println("Initializing client...")
 	initRequest := mcp.InitializeRequest{}
 	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
