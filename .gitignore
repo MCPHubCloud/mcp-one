@@ -19,3 +19,4 @@ go.work
 
 .idea/
 .vscode/
+_output/
