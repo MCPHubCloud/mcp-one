@@ -10,6 +10,7 @@ import (
 	"log"
 	"log/slog"
 	"mcphub.cloud/mcp-one/pkg/config"
+	"mcphub.cloud/mcp-one/pkg/registry"
 	"mcphub.cloud/mcp-one/pkg/types"
 	"strings"
 	"time"
@@ -46,7 +47,7 @@ func NewMCPOneServer(name string, serverConfig *config.McpOneConfig) *MCPOneServ
 }
 
 func (m *MCPOneServer) Start() {
-	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL("http://localhost:8080"))
+	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL("http://localhost:8080/xxyyy"))
 	log.Printf("MCP-One server listening on :8080")
 	if err := sse.Start(":8080"); err != nil {
 		log.Fatalf("Server error: %v", err)
@@ -101,7 +102,7 @@ func (m *MCPOneServer) callTool(ctx context.Context, request mcp.CallToolRequest
 	return mcp.NewToolResultText(fmt.Sprintf("Failed call tool  %s!", request.Params.Name)), nil
 }
 
-func (m *MCPOneServer) registerServer(registry types.ServerRegistryInfo) {
+func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 	//建立客户端，更新链接状态
 	var client mcpclient.MCPClient
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
