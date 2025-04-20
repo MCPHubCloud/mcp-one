@@ -8,7 +8,6 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	mcpserver "github.com/mark3labs/mcp-go/server"
 	"log"
-	"log/slog"
 	"mcphub.cloud/mcp-one/pkg/config"
 	"mcphub.cloud/mcp-one/pkg/registry"
 	"mcphub.cloud/mcp-one/pkg/types"
@@ -121,11 +120,11 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 	case types.TransportSSE:
 		{
 			if c, err := mcpclient.NewSSEMCPClient(registry.Url); err != nil {
-				slog.Error("failed register mcp server for %s, %s", registry.Name, err.Error())
+				log.Printf("failed register mcp server for %s, %s", registry.Name, err.Error())
 				return
 			} else {
 				if err := c.Start(ctx); err != nil {
-					slog.Error("failed start sse client for %s, %s", registry.Name, err.Error())
+					log.Printf("failed start sse client for %s, %s", registry.Name, err.Error())
 					return
 				}
 				client = c
@@ -134,7 +133,7 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 
 	case types.TransportStdio:
 		if c, err := mcpclient.NewStdioMCPClient(registry.Command, registry.Env, registry.Args...); err != nil {
-			slog.Error("failed register mcp server for ", registry.Name)
+			log.Printf("failed register mcp server for %s", registry.Name)
 			return
 		} else {
 			client = c
@@ -155,7 +154,7 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 
 	initResult, err := client.Initialize(ctx, initRequest)
 	if err != nil {
-		slog.Error("Failed to initialize: %v", err)
+		log.Printf("Failed to initialize: %v", err)
 	}
 
 	serverInstance.SetConnected(client)

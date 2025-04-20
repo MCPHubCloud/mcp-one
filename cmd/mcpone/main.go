@@ -27,8 +27,8 @@ func main() {
 			}
 
 			//commandline params overwrite config params
-			if filePath != "" {
-				conf.McpServerConfigFile = filePath
+			if mcpServerConfigFile != "" {
+				conf.McpServerConfigFile = mcpServerConfigFile
 			}
 
 			if provider != "" {
@@ -52,9 +52,9 @@ func main() {
 
 	rootCmd.Flags().StringVarP(&name, "name", "n", "mcpone", "config file of mcpone")
 	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-config.yaml", "config file of mcpone")
-	rootCmd.Flags().StringVarP(&mcpServerConfigFile, "mcpserver-config", "", "mcpserver-config.yaml", "mcpServers list config")
+	rootCmd.Flags().StringVarP(&mcpServerConfigFile, "", "", "", "mcpServers list config")
 	rootCmd.Flags().StringVarP(&provider, "provider", "p", "local", "current only support [local] provider")
-	rootCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "http://localhost:9090", "mcpoone server listen address")
+	rootCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "", "mcpoone server listen address")
 
 	if err := rootCmd.MarkFlagRequired("config"); err != nil {
 		fmt.Println("needed config file for mcpone:", err)
