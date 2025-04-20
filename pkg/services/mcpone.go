@@ -54,8 +54,9 @@ func NewMCPOneServer(oneServerConfig *config.McpOneConfig) *MCPOneServer {
 }
 
 func (m *MCPOneServer) Start() {
-	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL(m.serverConfig.GetBaseUrlOrDefault("http://localhost:9090")))
-	log.Printf("MCP-One server listening on :8080")
+	baseUrl := m.serverConfig.GetBaseUrlOrDefault("http://localhost:9090")
+	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL(baseUrl))
+	log.Printf("MCP-One server listening on: %s", baseUrl)
 	if err := sse.Start(":8080"); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
