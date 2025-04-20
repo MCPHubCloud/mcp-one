@@ -13,8 +13,8 @@ func main() {
 	var filePath string
 
 	var rootCmd = &cobra.Command{
-		Use:   "mcpone -c config.yaml",
-		Short: "mcpone -c config.yaml",
+		Use:   "mcpone -c mcpserver-config.yaml",
+		Short: "mcpone -c mcpserver-config.yaml",
 		Run: func(cmd *cobra.Command, args []string) {
 			conf, err := utils.ReadAndParseFile[config.McpOneConfig](filePath)
 			if err != nil {
@@ -27,7 +27,7 @@ func main() {
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-config.yaml", "config file  of mcpone server")
+	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-mcpserver-config.yaml", "config file  of mcpone server")
 	if err := rootCmd.MarkFlagRequired("config"); err != nil {
 		fmt.Println("needed config file:", err)
 		return

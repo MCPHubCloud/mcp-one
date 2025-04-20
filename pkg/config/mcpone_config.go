@@ -15,7 +15,7 @@ type McpOneConfig struct {
 func NewDefaultMcpOneConfig() *McpOneConfig {
 	config := &McpOneConfig{
 		ProviderType:        LocalProvider,
-		McpServerConfigFile: "config.yaml",
+		McpServerConfigFile: "mcpserver-config.yaml",
 	}
 	return config
 }

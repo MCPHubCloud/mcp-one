@@ -24,7 +24,7 @@ func TestConfigProvider_loadOnce(t *testing.T) {
 		{
 			name: "load_once",
 			args: args{
-				filePath: "../../examples/config.yaml",
+				filePath: "../../examples/mcpserver-config.yaml",
 			},
 		},
 	}

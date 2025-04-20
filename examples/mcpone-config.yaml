@@ -1,2 +1,2 @@
 provider_type: "local"
-mcpserver_config: "config.yaml"
+mcpserver_config: "examples/mcpserver-config.yaml"
