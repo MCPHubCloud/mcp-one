@@ -38,9 +38,9 @@ type MCPOneServer struct {
 	tools     map[string]*types.ServerInstance //toolname -> instance
 }
 
-func NewMCPOneServer(name string, oneServerConfig *config.McpOneConfig) *MCPOneServer {
+func NewMCPOneServer(oneServerConfig *config.McpOneConfig) *MCPOneServer {
 	oneServer := &MCPOneServer{
-		server:       mcpserver.NewMCPServer(name, "1.0.0"),
+		server:       mcpserver.NewMCPServer(oneServerConfig.Name, "1.0.0"),
 		instances:    make(map[string]*types.ServerInstance),
 		serverConfig: oneServerConfig,
 		tools:        make(map[string]*types.ServerInstance),
@@ -54,7 +54,7 @@ func NewMCPOneServer(name string, oneServerConfig *config.McpOneConfig) *MCPOneS
 }
 
 func (m *MCPOneServer) Start() {
-	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL("http://localhost:8080/xxyyy"))
+	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL(m.serverConfig.GetBaseUrlOrDefault("http://localhost:9090")))
 	log.Printf("MCP-One server listening on :8080")
 	if err := sse.Start(":8080"); err != nil {
 		log.Fatalf("Server error: %v", err)

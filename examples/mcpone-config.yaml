@@ -1,2 +1,4 @@
+name: "mcpone"
 provider_type: "local"
 mcpserver_config: "examples/mcpserver-config.yaml"
+base_url: "http://localhost:9090"

@@ -11,25 +11,53 @@ import (
 
 func main() {
 	var filePath string
+	var provider string
+	var mcpServerConfigFile string
+	var baseUrl string
+	var name string
 
 	var rootCmd = &cobra.Command{
 		Use:   "mcpone -c mcpserver-config.yaml",
 		Short: "mcpone -c mcpserver-config.yaml",
 		Run: func(cmd *cobra.Command, args []string) {
 			conf, err := utils.ReadAndParseFile[config.McpOneConfig](filePath)
+
+			if name != "" {
+				conf.Name = name
+			}
+
+			//commandline params overwrite config params
+			if filePath != "" {
+				conf.McpServerConfigFile = filePath
+			}
+
+			if provider != "" {
+				conf.ProviderType = config.ProviderType(provider)
+			}
+
+			if baseUrl != "" {
+				conf.BaseUrl = baseUrl
+			}
+
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			mcpserver := services.NewMCPOneServer("mcpone", conf)
-			mcpserver.LoadAllServers()
-			mcpserver.Start()
+
+			mcpServer := services.NewMCPOneServer(conf)
+			mcpServer.LoadAllServers()
+			mcpServer.Start()
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-mcpserver-config.yaml", "config file  of mcpone server")
+	rootCmd.Flags().StringVarP(&name, "name", "n", "mcpone", "config file of mcpone")
+	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-config.yaml", "config file of mcpone")
+	rootCmd.Flags().StringVarP(&mcpServerConfigFile, "mcpserver-config", "", "mcpserver-config.yaml", "mcpServers list config")
+	rootCmd.Flags().StringVarP(&provider, "provider", "p", "local", "current only support [local] provider")
+	rootCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "http://localhost:9090", "mcpoone server listen address")
+
 	if err := rootCmd.MarkFlagRequired("config"); err != nil {
-		fmt.Println("needed config file:", err)
+		fmt.Println("needed config file for mcpone:", err)
 		return
 	}
 
