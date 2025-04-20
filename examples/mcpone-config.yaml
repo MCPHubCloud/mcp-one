@@ -1,0 +1,2 @@
+provider_type: "local"
+mcpserver_config: "config.yaml"

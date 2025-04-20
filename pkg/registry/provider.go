@@ -17,5 +17,5 @@ type ServerRegistryInfo struct {
 }
 
 type RegistryProvider interface {
-	get_registy() []ServerRegistryInfo
+	GetRegisteredServers() []ServerRegistryInfo
 }

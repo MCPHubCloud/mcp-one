@@ -1,22 +1,40 @@
 package registry
 
 import (
-	"encoding/json"
-	"github.com/labstack/gommon/log"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"mcphub.cloud/mcp-one/pkg/config"
-	"strings"
+	"log"
+	"mcphub.cloud/mcp-one/pkg/utils"
 	"sync"
 	"time"
 )
 
-type ConfigProvider struct {
-	lock   sync.RWMutex
-	config config.McpOneConfig
+type McpServerConfig struct {
+	McpServers map[string]ServerRegistryInfo `json:"mcpServers" yaml:"mcpServers"`
 }
 
-func (p *ConfigProvider) get_registy() []ServerRegistryInfo {
+type ConfigProvider struct {
+	lock       sync.RWMutex
+	configFile string
+	config     *McpServerConfig
+}
+
+func NewConfigProvider(configFile string) *ConfigProvider {
+	configProvider := &ConfigProvider{
+		lock:       sync.RWMutex{},
+		configFile: configFile,
+		config: &McpServerConfig{
+			McpServers: make(map[string]ServerRegistryInfo),
+		},
+	}
+
+	configProvider.loadOnce()
+
+	stopChan := make(chan struct{})
+	go configProvider.StartMonitor(stopChan)
+
+	return configProvider
+}
+
+func (p *ConfigProvider) GetRegisteredServers() []ServerRegistryInfo {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 
@@ -29,35 +47,16 @@ func (p *ConfigProvider) get_registy() []ServerRegistryInfo {
 	return copyServers
 }
 
-// 判断文件类型
-func getFileType(filePath string) string {
-	lowerCasePath := strings.ToLower(filePath)
-	if strings.HasSuffix(lowerCasePath, ".json") {
-		return "json"
-	} else if strings.HasSuffix(lowerCasePath, ".yaml") || strings.HasSuffix(lowerCasePath, ".yml") {
-		return "yaml"
-	}
-	return ""
-}
-
-func (p *ConfigProvider) loadOnce(filePath string) {
+func (p *ConfigProvider) loadOnce() {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	data, err := ioutil.ReadFile(filePath)
+	conf, err := utils.ReadAndParseFile[McpServerConfig](p.configFile)
 	if err != nil {
-		log.Errorf("read file %s error: %v", filePath, err)
+		log.Fatalf("failed load config from %s ", p.configFile)
 	}
 
-	fileType := getFileType(filePath)
-	switch fileType {
-	case "json":
-		err = json.Unmarshal(data, &p.config)
-	case "yaml":
-		err = yaml.Unmarshal(data, &p.config)
-	default:
-		log.Errorf("unsupport file type")
-	}
+	p.config = conf
 }
 
 func (p *ConfigProvider) StartMonitor(stop chan struct{}) {
@@ -66,7 +65,7 @@ func (p *ConfigProvider) StartMonitor(stop chan struct{}) {
 	for {
 		select {
 		case <-ticker.C:
-			p.loadOnce("config.json")
+			p.loadOnce()
 		}
 	}
 }

@@ -30,6 +30,7 @@ func extractToolName(s string) (string, error) {
 }
 
 type MCPOneServer struct {
+	provider     registry.RegistryProvider
 	serverConfig *config.McpOneConfig
 	server       *mcpserver.MCPServer
 
@@ -37,13 +38,19 @@ type MCPOneServer struct {
 	tools     map[string]*types.ServerInstance //toolname -> instance
 }
 
-func NewMCPOneServer(name string, serverConfig *config.McpOneConfig) *MCPOneServer {
-	return &MCPOneServer{
+func NewMCPOneServer(name string, oneServerConfig *config.McpOneConfig) *MCPOneServer {
+	oneServer := &MCPOneServer{
 		server:       mcpserver.NewMCPServer(name, "1.0.0"),
 		instances:    make(map[string]*types.ServerInstance),
-		serverConfig: serverConfig,
+		serverConfig: oneServerConfig,
 		tools:        make(map[string]*types.ServerInstance),
 	}
+
+	if oneServerConfig.ProviderType == config.LocalProvider {
+		oneServer.provider = registry.NewConfigProvider(oneServerConfig.McpServerConfigFile)
+	}
+
+	return oneServer
 }
 
 func (m *MCPOneServer) Start() {
@@ -55,11 +62,12 @@ func (m *MCPOneServer) Start() {
 }
 
 func (m *MCPOneServer) GetActiveServers() {
-	//TODO
+	//TODO user can disable server in progress
 }
 
 func (m *MCPOneServer) LoadAllServers() {
-	for _, registryInfo := range m.serverConfig.McpServers {
+	registeredServer := m.provider.GetRegisteredServers()
+	for _, registryInfo := range registeredServer {
 		m.registerServer(registryInfo)
 	}
 }
