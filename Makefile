@@ -39,4 +39,4 @@ clean: # 清理构建产物、临时文件等.
 
 .PHONY: dockerbuild
 dockerbuild:
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) docker/
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f docker/Dockerfile .
