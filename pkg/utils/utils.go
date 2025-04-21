@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,6 +23,15 @@ func GetFileType(filePath string) string {
 
 // 读取文件并解析，使用泛型
 func ReadAndParseFile[T any](filePath string) (*T, error) {
+	// 检查是否为绝对路径，如果不是则拼接当前工作目录
+	if !filepath.IsAbs(filePath) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		filePath = filepath.Join(wd, filePath)
+	}
+
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
