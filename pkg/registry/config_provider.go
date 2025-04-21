@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"log"
+	"k8s.io/klog/v2"
 	"mcphub.cloud/mcp-one/pkg/utils"
 	"sync"
 	"time"
@@ -53,7 +53,7 @@ func (p *ConfigProvider) loadOnce() {
 
 	conf, err := utils.ReadAndParseFile[McpServerConfig](p.configFile)
 	if err != nil {
-		log.Fatalf("failed load config from %s ", p.configFile)
+		klog.Errorf("failed load config from %s ", p.configFile)
 	}
 
 	p.config = conf

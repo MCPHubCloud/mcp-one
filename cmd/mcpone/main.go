@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"k8s.io/klog/v2"
 	"mcphub.cloud/mcp-one/pkg/config"
 	"mcphub.cloud/mcp-one/pkg/services"
 	"mcphub.cloud/mcp-one/pkg/utils"
@@ -40,7 +41,7 @@ func main() {
 			}
 
 			if err != nil {
-				fmt.Println(err)
+				klog.Error(err)
 				return
 			}
 
@@ -50,6 +51,8 @@ func main() {
 		},
 	}
 
+	klog.InitFlags(flag.CommandLine)
+	rootCmd.Flags().AddGoFlagSet(flag.CommandLine)
 	rootCmd.Flags().StringVarP(&name, "name", "n", "mcpone", "config file of mcpone")
 	rootCmd.Flags().StringVarP(&filePath, "config", "c", "mcpone-config.yaml", "config file of mcpone")
 	rootCmd.Flags().StringVarP(&mcpServerConfigFile, "", "", "", "mcpServers list config")
@@ -57,11 +60,11 @@ func main() {
 	rootCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "", "mcpoone server listen address")
 
 	if err := rootCmd.MarkFlagRequired("config"); err != nil {
-		fmt.Println("needed config file for mcpone:", err)
+		klog.Errorf("needed config file for mcpone, %s", err)
 		return
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("failed run mcpone sever", err)
+		klog.Errorf("failed run mcpone server, %s", err)
 	}
 }

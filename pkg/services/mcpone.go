@@ -7,10 +7,12 @@ import (
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 	mcpserver "github.com/mark3labs/mcp-go/server"
+	"k8s.io/klog/v2"
 	"log"
 	"mcphub.cloud/mcp-one/pkg/config"
 	"mcphub.cloud/mcp-one/pkg/registry"
 	"mcphub.cloud/mcp-one/pkg/types"
+	"os"
 	"strings"
 	"time"
 )
@@ -55,9 +57,10 @@ func NewMCPOneServer(oneServerConfig *config.McpOneConfig) *MCPOneServer {
 func (m *MCPOneServer) Start() {
 	baseUrl := m.serverConfig.GetBaseUrlOrDefault("http://localhost:9090")
 	sse := mcpserver.NewSSEServer(m.server, mcpserver.WithBaseURL(baseUrl))
-	log.Printf("MCP-One server listening on: %s", baseUrl)
+	klog.Infof("MCP-One server listening on: %s", baseUrl)
 	if err := sse.Start(baseUrl); err != nil {
-		log.Fatalf("Server error: %v", err)
+		klog.Fatalf("Server error: %v", err)
+		os.Exit(-1)
 	}
 }
 
@@ -97,13 +100,13 @@ func (m *MCPOneServer) callTool(ctx context.Context, request mcp.CallToolRequest
 	}
 
 	request.Params.Name = backendToolName
-	log.Printf("Call tool name: %+v", request)
+	klog.Infof("Call tool name: %+v", request)
 	if client != nil {
 		ret, err := client.CallTool(ctx, request)
 		if err != nil {
-			log.Fatalf("Call tool error: %v", err)
+			klog.Fatalf("Call tool error: %v", err)
 		} else {
-			log.Printf("Call tool result: %+v", ret)
+			klog.Infof("Call tool result: %+v", ret)
 			return ret, nil
 		}
 	}
@@ -120,11 +123,11 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 	case types.TransportSSE:
 		{
 			if c, err := mcpclient.NewSSEMCPClient(registry.Url); err != nil {
-				log.Printf("failed register mcp server for %s, %s", registry.Name, err.Error())
+				klog.Infof("failed register mcp server for %s, %s", registry.Name, err.Error())
 				return
 			} else {
 				if err := c.Start(ctx); err != nil {
-					log.Printf("failed start sse client for %s, %s", registry.Name, err.Error())
+					klog.Infof("failed start sse client for %s, %s", registry.Name, err.Error())
 					return
 				}
 				client = c
@@ -133,7 +136,7 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 
 	case types.TransportStdio:
 		if c, err := mcpclient.NewStdioMCPClient(registry.Command, registry.Env, registry.Args...); err != nil {
-			log.Printf("failed register mcp server for %s", registry.Name)
+			klog.Infof("failed register mcp server for %s", registry.Name)
 			return
 		} else {
 			client = c
@@ -144,7 +147,7 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 	serverInstance := types.NewServerInstance(registry.Name)
 
 	//connect
-	fmt.Println("Initializing client...")
+	klog.Infof("Initializing client...")
 	initRequest := mcp.InitializeRequest{}
 	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
 	initRequest.Params.ClientInfo = mcp.Implementation{
@@ -159,25 +162,19 @@ func (m *MCPOneServer) registerServer(registry registry.ServerRegistryInfo) {
 
 	serverInstance.SetConnected(client)
 
-	fmt.Printf(
-		"Initialized with server: %s %s\n\n",
-		initResult.ServerInfo.Name,
-		initResult.ServerInfo.Version,
-	)
-
+	klog.Infof("Initialized with server: %s %s\n\n", initResult.ServerInfo.Name, initResult.ServerInfo.Version)
 	//fetch tools for this server
-	fmt.Println("Listing available tools...")
+	klog.Infof("Listing available tools...")
 	toolsRequest := mcp.ListToolsRequest{}
 	tools, err := client.ListTools(ctx, toolsRequest)
 	if err != nil {
-		log.Fatalf("Failed to list tools: %v", err)
+		klog.Errorf("Failed to list tools: %v", err)
 	}
 	for _, tool := range tools.Tools {
-		fmt.Printf("- %s: %s\n", tool.Name, tool.Description)
+		klog.Infof("- %s: %s\n", tool.Name, tool.Description)
 		serverInstance.AddTools(tool)
 
 		//add modified tool mcpone
 		m.addToolForMcpOneServer(tool, serverInstance)
 	}
-	fmt.Println()
 }
