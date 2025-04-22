@@ -3,12 +3,14 @@ mcpServers:
     enable: true
     name: "mcp-timeserver"
     transType: "stdio"
-    command: "/Users/barry/UserApps/anaconda3/anaconda3/bin/python3"
+    command: "python3"
     args:
       - "-m"
       - "mcp_simple_timeserver"
   mcp-fetch:
     enable: true
     name: "mcp-fetch"
-    transType: "sse"
-    url: "http://1.1.1.1:8080/sse"
+    transType: "stdio"
+    command: "uvx"
+    args:
+      - "mcp-server-fetch"

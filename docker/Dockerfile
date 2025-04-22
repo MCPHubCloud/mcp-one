@@ -25,11 +25,11 @@ COPY . .
 RUN  CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o mcp-one cmd/mcpone/main.go
 
 # 第二阶段：运行阶段
-FROM alpine:latest
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-# 安装依赖
-RUN apk --no-cache add ca-certificates
+#FROM alpine:latest
+#RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+#RUN apk --no-cache add ca-certificates
+FROM ghcr.io/astral-sh/uv:debian
+#RUN pip install uvx -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 创建工作目录
 WORKDIR /app
@@ -39,4 +39,4 @@ COPY --from=builder /app/mcp-one .
 COPY --from=builder /app/examples .
 
 # 运行 mcp-one 命令
-CMD ["./mcp-one", "--log_file=/tmp/mcpone.log", "-c", "/app/examples/mcpone-config.yaml", "--logtostderr=false", "-v", "5"]
+CMD ["./mcp-one", "--log_file=mcpone.log", "-c", "mcpone-config.yaml", "--logtostderr=true", "-v", "5"]
