@@ -3,10 +3,10 @@ mcpServers:
     enable: true
     name: "mcp-timeserver"
     transType: "stdio"
-    command: "python3"
+    command: "npx"
     args:
-      - "-m"
-      - "mcp_simple_timeserver"
+      - "-y"
+      - "time-mcp"
   mcp-fetch:
     enable: true
     name: "mcp-fetch"

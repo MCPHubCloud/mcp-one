@@ -38,5 +38,14 @@ WORKDIR /app
 COPY --from=builder /app/mcp-one .
 COPY --from=builder /app/examples .
 
+ENV UV_DEFAULT_INDEX="https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+RUN echo 'Types: deb'  > /etc/apt/sources.list.d/debian.sources && \
+    echo 'URIs: https://mirrors.tuna.tsinghua.edu.cn/debian' >>  /etc/apt/sources.list.d/debian.sources && \
+    echo 'Suites: bookworm bookworm-updates bookworm-backports' >>  /etc/apt/sources.list.d/debian.sources && \
+    echo 'Components: main contrib non-free non-free-firmware' >>  /etc/apt/sources.list.d/debian.sources && \
+    echo 'Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg' >>  /etc/apt/sources.list.d/debian.sources
+
+RUN apt update && apt install -y pip nodejs npm
+
 # 运行 mcp-one 命令
 CMD ["./mcp-one", "--log_file=mcpone.log", "-c", "mcpone-config.yaml", "--logtostderr=true", "-v", "5"]
